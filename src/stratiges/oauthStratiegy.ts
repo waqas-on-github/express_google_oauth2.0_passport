@@ -1,9 +1,9 @@
 import passport from "passport";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import "dotenv/config";
-import { PrismaClient, User } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 
-const db = new PrismaClient();
+export const db = new PrismaClient();
 
 if (
   !process.env.CLIENT_ID ||
@@ -14,9 +14,6 @@ if (
 }
 
 // Define an interface that extends the Prisma User type
-interface ExtendedUser extends User {
-  id: number; // Explicitly define id
-}
 
 export const oauth20Strategy = passport.use(
   new GoogleStrategy(
@@ -33,7 +30,7 @@ export const oauth20Strategy = passport.use(
 
         const userData = {
           googleId: profile.id,
-          name: profile.displayName,
+          username: profile.displayName,
           email: profile.emails[0].value,
           givenName: profile.name?.givenName,
           familyName: profile.name?.familyName,
@@ -41,21 +38,27 @@ export const oauth20Strategy = passport.use(
           emailVerified: profile.emails?.[0]?.verified || false,
         };
 
-        const user: ExtendedUser = await db.user.upsert({
+        const user = await db.user.upsert({
           where: { email: userData.email },
           update: { googleId: userData.googleId },
           create: {
             email: userData.email,
             googleId: userData.googleId,
-            name: userData.name,
+            username: userData.username,
             givenName: userData.givenName,
             familyName: userData.familyName,
             picture: userData.picture,
             emailVerified: userData.emailVerified,
           },
         });
-
-        return done(null, user);
+        // setting user data to req.user object
+        return done(null, {
+          email: user.email,
+          id: user.id,
+          googleId: user.googleId,
+          username: user.username,
+          emailVerified: user.emailVerified,
+        });
       } catch (error) {
         console.error("Error in Google Strategy:", error);
         return done(error as Error, false);

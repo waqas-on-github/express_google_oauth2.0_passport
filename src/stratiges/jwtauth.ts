@@ -19,7 +19,12 @@ export const passportJwt = passport.use(
       });
 
       if (user) {
-        return done(null, user);
+        return done(null, {
+          id: user.id,
+          googleId: user.googleId,
+          email: user.email,
+          username: user.username,
+        });
       } else {
         return done(null, false, { message: "User not found" });
       }

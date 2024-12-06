@@ -4,6 +4,8 @@ import { Request, Response, Router } from "express";
 import { oauth20Strategy } from "../stratiges/oauthStratiegy";
 import { generateAccessToken } from "../utils/jwt_helpers";
 import { requireAuth } from "../middlewares/isAuth";
+import { register } from "../controlers /register";
+import { login } from "../controlers /login";
 
 export const router = Router();
 
@@ -11,12 +13,8 @@ export const router = Router();
 type UserAuthType = {
   id: number;
   email: string;
-  passwordHash: string | null;
   googleId: string | null;
-  name: string | null;
-  givenName: string | null;
-  familyName: string | null;
-  picture: string | null;
+  username: string | null;
   emailVerified: boolean;
 };
 
@@ -71,3 +69,6 @@ router.get("/failure", (req, res) => {
 router.get("/authed", requireAuth, (req: Request, res: Response) => {
   res.json({ user: req.user });
 });
+
+router.post("/register", register);
+router.post("/login", login);

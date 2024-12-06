@@ -9,17 +9,21 @@ export const UserSchema = z.object({
   givenName: z.string().optional(),
   familyName: z.string().optional(),
   picture: z.string().url().optional(),
-  emailVerified: z.boolean(),
+  emailVerified: z.boolean().optional(),
   createdAt: z.date(),
   updatedAt: z.date(),
 });
 
 export type userType = z.infer<typeof UserSchema>;
 // Optional: Create input schemas for create and update operations
-export const UserCreateSchema = UserSchema.omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-});
+export const UserCreateSchema = UserSchema.pick({
+  email: true,
+  passwordHash: true,
+  name: true,
+}).required();
 
 export const UserUpdateSchema = UserCreateSchema.partial();
+export const UserLoginSchema = UserSchema.pick({
+  email: true,
+  passwordHash: true,
+}).required();
