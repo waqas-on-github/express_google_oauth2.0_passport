@@ -2,8 +2,35 @@
 /* eslint-disable prettier/prettier */
 import { Request, Response, Router } from "express";
 import { oauth20Strategy } from "../stratiges/oauthStratiegy";
+import { generateAccessToken } from "../utils/jwt_helpers";
+import { requireAuth } from "../middlewares/isAuth";
 
 export const router = Router();
+
+// Create a type that matches the User model structure
+type UserAuthType = {
+  id: number;
+  email: string;
+  passwordHash: string | null;
+  googleId: string | null;
+  name: string | null;
+  givenName: string | null;
+  familyName: string | null;
+  picture: string | null;
+  emailVerified: boolean;
+};
+
+// Extend the Request interface to include user
+declare global {
+  namespace Express {
+    interface User extends UserAuthType {}
+  }
+}
+
+// Extend the Request interface
+interface CustomRequest extends Request {
+  user?: UserAuthType;
+}
 
 router.get(
   "/google",
@@ -19,17 +46,28 @@ router.get(
     session: false,
     failureRedirect: "/auth/failure",
   }),
-  (req, res) => {
+  (req: CustomRequest, res: Response) => {
     // Return the JWT in response body
-    const token = req.user;
+
+    if (!req.user) {
+      res.status(401).send("Authentication failed.");
+      return;
+    }
+
+    const token = generateAccessToken({
+      email: req.user.email,
+      id: req.user.id,
+    });
+
     res.json({ token });
   }
 );
 
 // Failure route
-router.get("/failure", (_req, res) => {
+router.get("/failure", (req, res) => {
   res.status(401).send("Authentication failed.");
 });
-router.get("/", (_req: Request, res: Response) => {
-  res.send("Hello World! in auth woladd");
+
+router.get("/authed", requireAuth, (req: Request, res: Response) => {
+  res.json({ user: req.user });
 });

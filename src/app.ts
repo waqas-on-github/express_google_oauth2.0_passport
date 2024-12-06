@@ -4,7 +4,7 @@ import helmet from "helmet";
 import cors from "cors";
 import { router as authRoutes } from "./router/users";
 
-import * as middlewares from "./middlewares";
+import * as middlewares from "./middlewares/middlewares";
 import api from "./api";
 import MessageResponse from "./interfaces/MessageResponse";
 import passport from "passport";
